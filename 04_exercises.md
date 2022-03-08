@@ -94,14 +94,88 @@ These exercises will reiterate what you learned in the "Mapping data with R" tut
 ### Starbucks locations (`ggmap`)
 
   1. Add the `Starbucks` locations to a world map. Add an aesthetic to the world map that sets the color of the points according to the ownership type. What, if anything, can you deduce from this visualization?  
+  
+
+```r
+starbs_wrld_map <- get_stamenmap(
+    bbox = c(left = -171.2, bottom = -56.9, right = 250, top = 83.6), 
+    maptype = "terrain",
+    zoom = 2)
+
+ggmap(starbs_wrld_map) +
+  geom_point(data = Starbucks, 
+            aes(x = Longitude, y = Latitude, color = `Ownership Type`),
+            size = .3) +
+  theme_map() +
+  theme(legend.background = element_blank())
+```
+
+![](04_exercises_files/figure-html/unnamed-chunk-1-1.png)<!-- -->
+  
 
   2. Construct a new map of Starbucks locations in the Twin Cities metro area (approximately the 5 county metro area).  
+  
 
-  3. In the Twin Cities plot, play with the zoom number. What does it do?  (just describe what it does - don't actually include more than one map).  
+```r
+starbs_msp_map <- get_stamenmap(
+    bbox = c(left = -93.9853, bottom = 44.6267, right = -92.3566, top = 45.2759), 
+    maptype = "terrain",
+    zoom = 10)
+
+ggmap(starbs_msp_map) +
+  geom_point(data = Starbucks, 
+            aes(x = Longitude, y = Latitude, color = `Ownership Type`),
+            size = .7) +
+  theme_map() +
+  theme(legend.background = element_blank())
+```
+
+![](04_exercises_files/figure-html/unnamed-chunk-2-1.png)<!-- -->
+  
+
+  3. In the Twin Cities plot, play with the zoom number. What does it do?  (just describe what it does - don't actually include more than one map). 
+  
+  **The zoom number changes how zoomed in or out the map is. When I plugged in 8, it was focused only on the direct twin cities area, with the words being massive. As I changed the zoom to 9, it zoomed out slightly and gave the areas directly surrounding the twin cities. When I set the zoom number back to 10, it gave me the normal looking map that I had originally plotted.**
 
   4. Try a couple different map types (see `get_stamenmap()` in help and look at `maptype`). Include a map with one of the other map types.  
+  
+
+```r
+starbs_msp_map <- get_stamenmap(
+    bbox = c(left = -93.9853, bottom = 44.6267, right = -92.3566, top = 45.2759), 
+    maptype = "watercolor",
+    zoom = 10)
+
+ggmap(starbs_msp_map) +
+  geom_point(data = Starbucks, 
+            aes(x = Longitude, y = Latitude, color = `Ownership Type`),
+            size = .7) +
+  scale_color_viridis_d(option = "inferno") +
+  theme_map() +
+  theme(legend.background = element_blank())
+```
+
+![](04_exercises_files/figure-html/unnamed-chunk-3-1.png)<!-- -->
+  
 
   5. Add a point to the map that indicates Macalester College and label it appropriately. There are many ways you can do think, but I think it's easiest with the `annotate()` function (see `ggplot2` cheatsheet).
+  
+
+```r
+starbs_msp_map <- get_stamenmap(
+    bbox = c(left = -93.9853, bottom = 44.6267, right = -92.3566, top = 45.2759), 
+    maptype = "terrain",
+    zoom = 10)
+
+ggmap(starbs_msp_map) +
+  theme_map() +
+  theme(legend.background = element_blank()) +
+  annotate("point", x =-93.1691, y = 44.9379, color = "green") +
+  annotate("text", x = -93.2, y = 44.923, size = 2.5, label = "Macalester College", color = "black")
+```
+
+![](04_exercises_files/figure-html/unnamed-chunk-4-1.png)<!-- -->
+  
 
 ### Choropleth maps with Starbucks data (`geom_map()`)
 
@@ -124,6 +198,33 @@ starbucks_with_2018_pop_est <-
   6. **`dplyr` review**: Look through the code above and describe what each line of code does.
 
   7. Create a choropleth map that shows the number of Starbucks per 10,000 people on a map of the US. Use a new fill color, add points for all Starbucks in the US (except Hawaii and Alaska), add an informative title for the plot, and include a caption that says who created the plot (you!). Make a conclusion about what you observe.
+  
+
+```r
+us <- map_data("state")
+
+ggplot() + 
+  geom_map(data=us, map=us,
+                    aes(long, lat, map_id=region, inherit.aes = FALSE),
+                    color="#2b2b2b", fill=NA, size=0.5) + 
+  geom_map(data=starbucks_with_2018_pop_est, map=us,
+                    aes(fill=starbucks_with_2018_pop_est$starbucks_per_10000,
+                        map_id=starbucks_with_2018_pop_est$state_name, inherit.aes = FALSE),
+                    color="white", size=0.5) +
+  expand_limits(x = us$long, y = us$lat) +
+  geom_sf() +
+  geom_point(data = Starbucks %>% 
+               filter(Country == "US"), aes(x = Longitude, y = Latitude), size = .5, color = "darkgreen") +
+  coord_sf(xlim = c(-140, -60), ylim = c(25, 50), expand = FALSE) +
+  theme_map() +
+  theme(legend.background = element_blank()) +
+  labs(fill = "Starbucks per 10,000", caption = "Map Created by Ty Benz") +
+  ggtitle("Map of All the Starbucks in the US") +
+  scale_fill_viridis_c(option = "inferno")
+```
+
+![](04_exercises_files/figure-html/unnamed-chunk-6-1.png)<!-- -->
+  
 
 ### A few of your favorite things (`leaflet`)
 
